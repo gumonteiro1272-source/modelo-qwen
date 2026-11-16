@@ -1,18 +1,16 @@
-name: Baixar Modelo
-on:
-  workflow_dispatch:
+name: Baixar Qwen 3B
+on: workflow_dispatch
 permissions:
   contents: write
 jobs:
   download:
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar e Dividir GGUF
+      - name: Baixar GGUF 3B
         run: |
-          curl -L -o qwen2.5-coder-7b-instruct-q4_k_m.gguf https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q4_k_m.gguf
-          split -b 1800M -d qwen2.5-coder-7b-instruct-q4_k_m.gguf parte_
-      - name: Publicar Partes no Release
+          curl -L -o qwen2.5-coder-3b-instruct-q4_k_m.gguf "https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf"
+      - name: Publicar no Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0
-          files: parte_*
+          tag_name: qwen-3b
+          files: qwen2.5-coder-3b-instruct-q4_k_m.gguf
