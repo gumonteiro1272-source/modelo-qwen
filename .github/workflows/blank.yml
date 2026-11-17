@@ -1,4 +1,4 @@
-name: Baixar Modelo OpenVINO NPU-GPU
+name: Compilar Qwen2.5-Coder-3B para NPU+GPU
 
 on:
   workflow_dispatch:
@@ -7,24 +7,33 @@ permissions:
   contents: write
 
 jobs:
-  build-model:
+  build-npu-model:
     runs-on: ubuntu-latest
     steps:
-      - name: Instalar HuggingFace CLI
-        run: pip install -U huggingface_hub
-
-      - name: Baixar OpenVINO/Qwen2.5-Coder-3B-Instruct-int4-ov
+      - name: Instalar Optimum-Intel e OpenVINO
         run: |
-          python -c "from huggingface_hub import snapshot_download; snapshot_download('OpenVINO/Qwen2.5-Coder-3B-Instruct-int4-ov', local_dir='modelo_openvino')"
+          pip install -U pip
+          pip install optimum[openvino] openvino-genai huggingface_hub
+
+      - name: Exportar Qwen2.5-Coder-3B-Instruct compatível com NPU37XX
+        run: |
+          optimum-cli export openvino \
+            --model Qwen/Qwen2.5-Coder-3B-Instruct \
+            --task text-generation-with-past \
+            --weight-format int4 \
+            --sym \
+            --group-size 128 \
+            --ratio 1.0 \
+            modelo_npu_ov
 
       - name: Compactar em ZIP único
         run: |
-          cd modelo_openvino
-          zip -r ../modelo_openvino_qwen3b.zip .
+          cd modelo_npu_ov
+          zip -r ../modelo_coder3b_npu.zip .
 
       - name: Publicar na Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: openvino-qwen3b-v1
-          name: Modelo OpenVINO Qwen2.5-Coder-3B INT4
-          files: modelo_openvino_qwen3b.zip
+          tag_name: openvino-coder3b-npu-v1
+          name: Modelo OpenVINO Qwen2.5-Coder-3B (NPU + GPU)
+          files: modelo_coder3b_npu.zip
