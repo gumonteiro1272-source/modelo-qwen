@@ -1,16 +1,30 @@
-name: Baixar Qwen 3B
-on: workflow_dispatch
+name: Baixar Modelo OpenVINO NPU-GPU
+
+on:
+  workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
-  download:
+  build-model:
     runs-on: ubuntu-latest
     steps:
-      - name: Baixar GGUF 3B
+      - name: Instalar HuggingFace CLI
+        run: pip install -U huggingface_hub
+
+      - name: Baixar OpenVINO/Qwen2.5-Coder-3B-Instruct-int4-ov
         run: |
-          curl -L -o qwen2.5-coder-3b-instruct-q4_k_m.gguf "https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q4_k_m.gguf"
-      - name: Publicar no Release
+          python -c "from huggingface_hub import snapshot_download; snapshot_download('OpenVINO/Qwen2.5-Coder-3B-Instruct-int4-ov', local_dir='modelo_openvino')"
+
+      - name: Compactar em ZIP único
+        run: |
+          cd modelo_openvino
+          zip -r ../modelo_openvino_qwen3b.zip .
+
+      - name: Publicar na Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: qwen-3b
-          files: qwen2.5-coder-3b-instruct-q4_k_m.gguf
+          tag_name: openvino-qwen3b-v1
+          name: Modelo OpenVINO Qwen2.5-Coder-3B INT4
+          files: modelo_openvino_qwen3b.zip
